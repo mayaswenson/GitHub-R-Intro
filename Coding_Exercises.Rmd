@@ -1,0 +1,48 @@
+---
+title: "Coding_Exercises"
+author: "Maya"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("setup.R")
+```
+Load data set:
+```{r}
+data("knz_bison")
+colnames(knz_bison)
+```
+
+1. Create a new column in the bison dataset that calculates the individual’s age at the time of observation.
+```{r}
+knz_bison$animal_age <- knz_bison$rec_year - knz_bison$animal_yob
+```
+
+2. Write a function that will first filter the bison dataset based on any user-specified weight threshold (returning the filtered dataset).
+```{r}
+filter_bison_weight <- function(data, weight_threshold) {data %>%
+    filter(animal_weight >= weight_threshold)}
+```
+```{r}
+heavy_bison <- filter_bison_weight(knz_bison, 500)
+```
+
+3. Create a boxplot showing weight distribution between male and female bison, and then conduct a t-test to see if weight is significantly difference between males and females.
+```{r}
+# Find units used for animal weights for accurate labeling:
+?knz_bison
+```
+```{r}
+ggplot(knz_bison, aes(x = animal_sex, y = animal_weight, fill = animal_sex)) + geom_boxplot() + labs(title = "Bison Weight Distribution by Sex", x = "Sex", y = "Weight (lbs)") + theme_gray()
+```
+Male bison have a larger distribution of weights than females, with some outliers nearing/over 2000lbs. Females have a greater lower and upper quartiles, and greater median bodyweight than males. 
+```{r}
+t_test <- t.test(animal_weight ~ animal_sex, data = knz_bison)
+t_test
+```
+Weight is significantyl different (p < 0.05) between sex of Bisons, where females have a greater mean weight (761.9 lbs) compared to males (727.9 lbs). 
