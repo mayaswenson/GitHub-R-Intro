@@ -1,0 +1,73 @@
+---
+title: "Coding for Pull Request"
+author: "Maya"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load tidyverse:
+
+```{r}
+library(tidyverse)
+```
+
+Read in CSV:
+
+```{r}
+kenya <- read_csv("Intro-Git-GitHub/data/kenya_county_climates.csv")
+```
+
+Chain of operations to select, filter, and pivot:
+
+```{r}
+precip_filter <- kenya %>%
+# select() just the columns that have "Precipitation" in the name (so we are only interested in the precipitation data), AND the 'County' column.
+select(County, contains("Precipitation")) %>%
+  # filter() all the rows where 'Precipitation_585_90' is **greater than** the mean precipitation for all counties.
+  filter(Precipitation_585_90 > mean(Precipitation_585_90, na.rm = TRUE)) %>%
+  # pivot_longer() so we have one column for all precip values and one column with the value's associated variables (while keeping County as its own column too).
+  pivot_longer(cols = -County, names_to = "Scenario_Time", values_to = "Precipitation_mm")
+```
+
+How many counties have predicted precip values greater than the total county average?
+
+```{r}
+counties_gt_avg <- precip_filter %>% distinct(County) %>% nrow()
+counties_gt_avg
+```
+
+22 counties have a greater predicted precip value than the total country average.
+
+Bar plot:
+
+```{r}
+ggplot(precip_filter, aes(x = Scenario_Time, y = Precipitation_mm)) +
+  geom_col() +
+  facet_wrap(~ County) +
+  labs(x = "Scenario / Timeframe",y = "Precipitation (mm)",title = "Projected Precipitation by Timeframe of each County") +
+  theme_minimal()
+
+```
+
+
+Challenge:
+```{r warning=FALSE}
+library(purrr)
+county_vec <- precip_filter %>% distinct(County) %>% pull(County)
+
+plots_by_county <- map(
+  county_vec,
+  ~ precip_filter %>%
+    filter(County == .x) %>%
+    ggplot(aes(x = Scenario_Time, y = Precipitation_mm)) +
+    geom_col() +
+    labs(title = paste("Projected Precipitation for", .x),
+      x = "Scenario / Timeframe",
+      y = "Precipitation (mm)") + theme_minimal())
+```
+
+Finished assignment.
